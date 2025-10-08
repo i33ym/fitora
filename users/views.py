@@ -128,7 +128,7 @@ def verify_otp(request):
     
     return Response({
         **tokens,
-        'new_user': created
+        'new_user': not user.profile_completed
     })
 
 @extend_schema(
@@ -175,7 +175,7 @@ def google_auth(request):
     
     return Response({
         **tokens,
-        'new_user': created
+        'new_user': not user.profile_completed
     })
 
 @extend_schema(
