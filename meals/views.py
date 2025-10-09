@@ -144,12 +144,219 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from datetime import datetime
 from .models import Meal
-from .serializers import MealSerializer, MealCreateSerializer, MealListSerializer
+from .serializers import MealSerializer, MealCreateSerializer, MealListSerializer, MealAnalyzeSerializer
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+from datetime import datetime
 
+def calculate_daily_totals(meals):
+    """Calculate total nutritional values from all meals"""
+    totals = {
+        'calories': 0.0,
+        'carbs': 0.0,
+        'fat': 0.0,
+        'protein': 0.0,
+        'calcium': 0.0,
+        'iron': 0.0,
+        'magnesium': 0.0,
+        'potassium': 0.0,
+        'zinc': 0.0,
+        'vitamin_a': 0.0,
+        'vitamin_b12': 0.0,
+        'vitamin_b9': 0.0,
+        'vitamin_c': 0.0,
+        'vitamin_d': 0.0,
+        'cholesterol': 0.0,
+        'fiber': 0.0,
+        'omega_3': 0.0,
+        'saturated_fat': 0.0,
+        'sodium': 0.0,
+    }
+    
+    def parse_value(value_str):
+        """Extract numeric value from string like '780 kcal' -> 780.0"""
+        if not value_str:
+            return 0.0
+        try:
+            # Convert to string if it's not already
+            value_str = str(value_str)
+            # Split by space and get first part (the number)
+            return float(value_str.split()[0])
+        except (ValueError, IndexError, AttributeError):
+            return 0.0
+    
+    for meal in meals:
+        try:
+            foods_data = meal.foods_data
+            if not foods_data or not isinstance(foods_data, dict):
+                continue
+            
+            if 'foods' not in foods_data or not isinstance(foods_data['foods'], list):
+                continue
+            
+            for food in foods_data['foods']:
+                if not isinstance(food, dict):
+                    continue
+                
+                # Parse nutritions
+                nutritions = food.get('nutritions', {})
+                if isinstance(nutritions, dict):
+                    totals['calories'] += parse_value(nutritions.get('calories', '0'))
+                    totals['carbs'] += parse_value(nutritions.get('carbs', '0'))
+                    totals['fat'] += parse_value(nutritions.get('fat', '0'))
+                    totals['protein'] += parse_value(nutritions.get('protein', '0'))
+                
+                # Parse minerals
+                minerals = food.get('minerals', {})
+                if isinstance(minerals, dict):
+                    totals['calcium'] += parse_value(minerals.get('calcium', '0'))
+                    totals['iron'] += parse_value(minerals.get('iron', '0'))
+                    totals['magnesium'] += parse_value(minerals.get('magnesium', '0'))
+                    totals['potassium'] += parse_value(minerals.get('potassium', '0'))
+                    totals['zinc'] += parse_value(minerals.get('zinc', '0'))
+                
+                # Parse vitamins
+                vitamins = food.get('vitamins', {})
+                if isinstance(vitamins, dict):
+                    totals['vitamin_a'] += parse_value(vitamins.get('vitamin_a', '0'))
+                    totals['vitamin_b12'] += parse_value(vitamins.get('vitamin_b12', '0'))
+                    totals['vitamin_b9'] += parse_value(vitamins.get('vitamin_b9', '0'))
+                    totals['vitamin_c'] += parse_value(vitamins.get('vitamin_c', '0'))
+                    totals['vitamin_d'] += parse_value(vitamins.get('vitamin_d', '0'))
+                
+                # Parse additional
+                additional = food.get('additional', {})
+                if isinstance(additional, dict):
+                    totals['cholesterol'] += parse_value(additional.get('cholesterol', '0'))
+                    totals['fiber'] += parse_value(additional.get('fiber', '0'))
+                    totals['omega_3'] += parse_value(additional.get('omega_3', '0'))
+                    totals['saturated_fat'] += parse_value(additional.get('saturated_fat', '0'))
+                    totals['sodium'] += parse_value(additional.get('sodium', '0'))
+        except Exception as e:
+            print(f"Error processing meal {meal.id}: {str(e)}")
+            continue
+    
+    # Format with units
+    return {
+        'total_calories': f"{totals['calories']:.1f} kcal",
+        'total_carbs': f"{totals['carbs']:.1f} g",
+        'total_fat': f"{totals['fat']:.1f} g",
+        'total_protein': f"{totals['protein']:.1f} g",
+        'total_calcium': f"{totals['calcium']:.1f} mg",
+        'total_iron': f"{totals['iron']:.1f} mg",
+        'total_magnesium': f"{totals['magnesium']:.1f} mg",
+        'total_potassium': f"{totals['potassium']:.1f} mg",
+        'total_zinc': f"{totals['zinc']:.1f} mg",
+        'total_vitamin_a': f"{totals['vitamin_a']:.1f} mcg",
+        'total_vitamin_b12': f"{totals['vitamin_b12']:.1f} mcg",
+        'total_vitamin_b9': f"{totals['vitamin_b9']:.1f} mcg",
+        'total_vitamin_c': f"{totals['vitamin_c']:.1f} mg",
+        'total_vitamin_d': f"{totals['vitamin_d']:.1f} mcg",
+        'total_cholesterol': f"{totals['cholesterol']:.1f} mg",
+        'total_fiber': f"{totals['fiber']:.1f} g",
+        'total_omega_3': f"{totals['omega_3']:.1f} g",
+        'total_saturated_fat': f"{totals['saturated_fat']:.1f} g",
+        'total_sodium': f"{totals['sodium']:.1f} mg",
+    }
+
+@extend_schema(
+    request={
+        'multipart/form-data': {
+            'type': 'object',
+            'properties': {
+                'image': {
+                    'type': 'string',
+                    'format': 'binary'
+                },
+                'meal_date': {
+                    'type': 'string',
+                    'format': 'date'
+                },
+                'meal_time': {
+                    'type': 'string',
+                    'enum': ['breakfast', 'lunch', 'dinner', 'snack']
+                }
+            },
+            'required': ['image']
+        }
+    },
+    responses={
+        200: OpenApiResponse(description='Meal analysis complete'),
+        400: OpenApiResponse(description='Invalid data')
+    },
+    tags=['Meals']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def analyze_meal(request):
+    serializer = MealAnalyzeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    image = serializer.validated_data['image']
+    meal_date = serializer.validated_data.get('meal_date', datetime.now().date())
+    meal_time = serializer.validated_data.get('meal_time')
+    
+    # Save image to storage
+    filename = f"meals/{meal_date.year}/{meal_date.month:02d}/{meal_date.day:02d}/{image.name}"
+    path = default_storage.save(filename, ContentFile(image.read()))
+    image_url = request.build_absolute_uri(default_storage.url(path))
+    
+    # Read image data for OpenAI
+    image.seek(0)
+    image_data = image.read()
+    
+    # Analyze with OpenAI
+    try:
+        from .services import analyze_meal_image
+        analysis_result = analyze_meal_image(image_data)
+        
+        return Response({
+            'image_url': image_url,
+            'foods': analysis_result['foods']
+        })
+    except Exception as e:
+        # If analysis fails, delete the uploaded image
+        default_storage.delete(path)
+        return Response(
+            {'message': f'Analysis failed: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
 class MealPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 100
+
+# @extend_schema(
+#     request=MealCreateSerializer,
+#     responses={
+#         200: OpenApiResponse(response=MealListSerializer(many=True), description='List of meals'),
+#         201: OpenApiResponse(response=MealSerializer, description='Meal created successfully'),
+#         400: OpenApiResponse(description='Invalid data')
+#     },
+#     tags=['Meals']
+# )
+# @api_view(['GET', 'POST'])
+# @permission_classes([IsAuthenticated])
+# def meals(request):
+#     if request.method == 'GET':
+#         meals = Meal.objects.filter(user=request.user)
+        
+#         paginator = MealPagination()
+#         paginated_meals = paginator.paginate_queryset(meals, request)
+#         serializer = MealListSerializer(paginated_meals, many=True)
+        
+#         return paginator.get_paginated_response(serializer.data)
+    
+#     elif request.method == 'POST':
+#         serializer = MealCreateSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+#         meal = serializer.save(user=request.user)
+#         return Response(MealSerializer(meal).data, status=status.HTTP_201_CREATED)
 
 @extend_schema(
     request=MealCreateSerializer,
@@ -239,11 +446,12 @@ def daily_summary(request):
         user=request.user,
         created_at__date=date_obj
     )
-    
+    totals = calculate_daily_totals(meals_qs)
     serializer = MealSerializer(meals_qs, many=True)
     
     return Response({
         'date': date_str,
         'meals': serializer.data,
-        'total_meals': meals_qs.count()
+        'total_meals': meals_qs.count(),
+        **totals
     })
