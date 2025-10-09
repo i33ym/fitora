@@ -69,10 +69,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     target_weight = models.FloatField(null=True, blank=True)
     target_date = models.DateField(null=True, blank=True)
     
-    activeness_level = models.CharField(max_length=20, choices=ACTIVENESS_CHOICES, null=True, blank=True)
-    goal = models.CharField(max_length=20, choices=GOAL_CHOICES, null=True, blank=True)
-    motivation = models.CharField(max_length=20, choices=MOTIVATION_CHOICES, blank=True)
-    preferred_diet = models.CharField(max_length=20, choices=DIET_CHOICES, null=True, blank=True)
+    activeness_level = models.CharField(max_length=50, choices=ACTIVENESS_CHOICES, null=True, blank=True)
+    goal = models.CharField(max_length=50, choices=GOAL_CHOICES, null=True, blank=True)
+    motivation = models.CharField(max_length=50, choices=MOTIVATION_CHOICES, blank=True, null=True)
+    preferred_diet = models.CharField(max_length=50, choices=DIET_CHOICES, null=True, blank=True)
     # diet_restrictions = models.TextField(null=True, blank=True)
     diet_restrictions = ArrayField(models.CharField(max_length=100), null=True, blank=True, default=list)
     
