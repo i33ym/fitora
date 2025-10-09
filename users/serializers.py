@@ -21,7 +21,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'phone_number', 'first_name', 'last_name', 
             'gender', 'date_of_birth', 'current_height', 'current_weight',
-            'target_weight', 'target_date', 'activeness_level', 'motivation',
+            'target_weight', 'target_date', 'activeness_level', 'goal', 'motivation',
             'preferred_diet', 'diet_restrictions', 'profile_completed'
         ]
         read_only_fields = ['id', 'email', 'phone_number', 'profile_completed']
@@ -52,7 +52,7 @@ class ProfileCreateSerializer(serializers.ModelSerializer):
         fields = [
             'first_name', 'last_name', 'gender', 'date_of_birth',
             'current_height', 'current_weight', 'target_weight', 'target_date',
-            'activeness_level', 'motivation', 'preferred_diet', 'diet_restrictions'
+            'activeness_level', 'goal', 'motivation', 'preferred_diet', 'diet_restrictions'
         ]
     
     def validate_date_of_birth(self, value):

@@ -31,20 +31,27 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('extremely_active', 'Extremely Active'),
     ]
     
-    MOTIVATION_CHOICES = [
+    GOAL_CHOICES = [
         ('lose_weight', 'Lose Weight'),
         ('gain_weight', 'Gain Weight'),
         ('maintain_weight', 'Maintain Weight'),
     ]
+
+    MOTIVATION_CHOICES = [
+        ('vocation', 'Vocation'),
+        ('wedding', 'Wedding'),
+        ('competetion', 'Competetion'),
+        ('other', 'Other'),
+        ('no', 'No'),
+    ]
     
     DIET_CHOICES = [
-        ('standard', 'Standard'),
-        ('vegetarian', 'Vegetarian'),
-        ('vegan', 'Vegan'),
+        ('artificial_intelligence', 'Artificial Intelligence'),
+        ('balanced', 'Balanced'),
+        ('low_carbs', 'Low Carbs'),
         ('keto', 'Keto'),
-        ('paleo', 'Paleo'),
-        ('halal', 'Halal'),
-        ('mediterranean', 'Mediterranean'),
+        ('high_protein', 'High Protein'),
+        ('low_fat', 'Low Fat'),
     ]
 
     phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
@@ -63,7 +70,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     target_date = models.DateField(null=True, blank=True)
     
     activeness_level = models.CharField(max_length=20, choices=ACTIVENESS_CHOICES, null=True, blank=True)
-    motivation = models.CharField(max_length=20, choices=MOTIVATION_CHOICES, null=True, blank=True)
+    goal = models.CharField(max_length=20, choices=GOAL_CHOICES, null=True, blank=True)
+    motivation = models.CharField(max_length=20, choices=MOTIVATION_CHOICES, blank=True)
     preferred_diet = models.CharField(max_length=20, choices=DIET_CHOICES, null=True, blank=True)
     # diet_restrictions = models.TextField(null=True, blank=True)
     diet_restrictions = ArrayField(models.CharField(max_length=100), null=True, blank=True, default=list)

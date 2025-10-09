@@ -13,7 +13,7 @@ class UserAdmin(BaseUserAdmin):
         ('Authentication', {'fields': ('email', 'phone_number', 'google_id', 'password', 'fcm_token')}),
         ('Personal Info', {'fields': ('first_name', 'last_name', 'gender', 'date_of_birth')}),
         ('Physical Info', {'fields': ('current_height', 'current_weight', 'target_weight', 'target_date')}),
-        ('Goals & Preferences', {'fields': ('activeness_level', 'motivation', 'preferred_diet', 'diet_restrictions')}),
+        ('Goals & Preferences', {'fields': ('activeness_level', 'goal', 'motivation', 'preferred_diet', 'diet_restrictions')}),
         ('Status', {'fields': ('profile_completed', 'is_active', 'is_staff', 'is_superuser')}),
         ('Dates', {'fields': ('created_at', 'updated_at')}),
     )
