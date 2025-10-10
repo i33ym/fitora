@@ -144,11 +144,14 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from datetime import datetime
 from .models import Meal
-from .serializers import MealSerializer, MealCreateSerializer, MealListSerializer, MealAnalyzeSerializer
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-import os
 from datetime import datetime
+from .serializers import (
+    MealSerializer, MealCreateSerializer, MealListSerializer, 
+    MealAnalyzeSerializer, MealAnalysisResponseSerializer, 
+    DailySummaryResponseSerializer
+)
 
 def calculate_daily_totals(meals):
     """Calculate total nutritional values from all meals"""
@@ -260,6 +263,42 @@ def calculate_daily_totals(meals):
         'total_sodium': f"{totals['sodium']:.1f} mg",
     }
 
+# @extend_schema(
+#     request={
+#         'multipart/form-data': {
+#             'type': 'object',
+#             'properties': {
+#                 'image': {
+#                     'type': 'string',
+#                     'format': 'binary'
+#                 },
+#                 'meal_date': {
+#                     'type': 'string',
+#                     'format': 'date'
+#                 },
+#                 'meal_time': {
+#                     'type': 'string',
+#                     'enum': ['breakfast', 'lunch', 'dinner', 'snack']
+#                 }
+#             },
+#             'required': ['image']
+#         }
+#     },
+#     responses={
+#         200: OpenApiResponse(description='Meal analysis complete'),
+#         400: OpenApiResponse(description='Invalid data')
+#     },
+#     tags=['Meals']
+# # )
+# @extend_schema(
+#     request=MealAnalyzeSerializer,
+#     responses={
+#         200: OpenApiResponse(response=MealAnalysisResponseSerializer, description='Meal analysis complete'),
+#         400: OpenApiResponse(description='Invalid data'),
+#         500: OpenApiResponse(description='Analysis failed')
+#     },
+#     tags=['Meals']
+# )
 @extend_schema(
     request={
         'multipart/form-data': {
@@ -267,23 +306,27 @@ def calculate_daily_totals(meals):
             'properties': {
                 'image': {
                     'type': 'string',
-                    'format': 'binary'
+                    'format': 'binary',
+                    'description': 'Meal image file'
                 },
                 'meal_date': {
                     'type': 'string',
-                    'format': 'date'
+                    'format': 'date',
+                    'description': 'Date of the meal (YYYY-MM-DD). Defaults to today if not provided.'
                 },
                 'meal_time': {
                     'type': 'string',
-                    'enum': ['breakfast', 'lunch', 'dinner', 'snack']
+                    'enum': ['breakfast', 'lunch', 'dinner', 'snack'],
+                    'description': 'Optional meal time'
                 }
             },
             'required': ['image']
         }
     },
     responses={
-        200: OpenApiResponse(description='Meal analysis complete'),
-        400: OpenApiResponse(description='Invalid data')
+        200: OpenApiResponse(response=MealAnalysisResponseSerializer, description='Meal analysis complete'),
+        400: OpenApiResponse(description='Invalid data'),
+        500: OpenApiResponse(description='Analysis failed')
     },
     tags=['Meals']
 )
@@ -419,12 +462,22 @@ def meal_detail(request, pk):
         meal.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+# @extend_schema(
+#     parameters=[
+#         OpenApiParameter(name='date', description='Date in YYYY-MM-DD format', required=True, type=str)
+#     ],
+#     responses={
+#         200: OpenApiResponse(description='Daily meal summary'),
+#         400: OpenApiResponse(description='Invalid date format')
+#     },
+#     tags=['Meals']
+# )
 @extend_schema(
     parameters=[
         OpenApiParameter(name='date', description='Date in YYYY-MM-DD format', required=True, type=str)
     ],
     responses={
-        200: OpenApiResponse(description='Daily meal summary'),
+        200: OpenApiResponse(response=DailySummaryResponseSerializer, description='Daily meal summary with totals'),
         400: OpenApiResponse(description='Invalid date format')
     },
     tags=['Meals']

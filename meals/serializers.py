@@ -75,3 +75,39 @@ class MealListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meal
         fields = ['id', 'image_url', 'meal_date', 'meal_time', 'created_at']
+
+class FoodAnalysisSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    portion_size = serializers.CharField()
+    nutritions = serializers.DictField()
+    minerals = serializers.DictField()
+    vitamins = serializers.DictField()
+    additional = serializers.DictField()
+
+class MealAnalysisResponseSerializer(serializers.Serializer):
+    image_url = serializers.URLField()
+    foods = FoodAnalysisSerializer(many=True)
+
+class DailySummaryResponseSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    meals = MealSerializer(many=True)
+    total_meals = serializers.IntegerField()
+    total_calories = serializers.CharField()
+    total_carbs = serializers.CharField()
+    total_fat = serializers.CharField()
+    total_protein = serializers.CharField()
+    total_calcium = serializers.CharField()
+    total_iron = serializers.CharField()
+    total_magnesium = serializers.CharField()
+    total_potassium = serializers.CharField()
+    total_zinc = serializers.CharField()
+    total_vitamin_a = serializers.CharField()
+    total_vitamin_b12 = serializers.CharField()
+    total_vitamin_b9 = serializers.CharField()
+    total_vitamin_c = serializers.CharField()
+    total_vitamin_d = serializers.CharField()
+    total_cholesterol = serializers.CharField()
+    total_fiber = serializers.CharField()
+    total_omega_3 = serializers.CharField()
+    total_saturated_fat = serializers.CharField()
+    total_sodium = serializers.CharField()
