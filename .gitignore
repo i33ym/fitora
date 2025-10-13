@@ -12,3 +12,4 @@ db.sqlite3
 staticfiles/
 */migrations/*.py
 !*/migrations/__init__.py
+.idea/
