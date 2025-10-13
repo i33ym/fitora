@@ -25,6 +25,7 @@ from .serializers import (
     UserProfileSerializer, ProfileCreateSerializer
 )
 from .utils import generate_otp, send_sms, verify_google_token
+from django.utils.translation import gettext as _
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -61,7 +62,7 @@ def send_otp(request):
     
     if not sms_sent:
         return Response(
-            {'message': 'Failed to send OTP'},
+            {'message': _('Failed to send OTP')},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
@@ -69,7 +70,7 @@ def send_otp(request):
     
     return Response({
         'session': str(otp_session.session),
-        'message': 'OTP sent successfully',
+        'message': _('OTP sent successfully'),
         'expiry': expiry_seconds
     })
 
@@ -101,19 +102,19 @@ def verify_otp(request):
         )
     except OTPSession.DoesNotExist:
         return Response(
-            {'message': 'Invalid session'},
+            {'message': _('Invalid session')},
             status=status.HTTP_400_BAD_REQUEST
         )
     
     if otp_session.is_expired():
         return Response(
-            {'message': 'OTP expired'},
+            {'message': _('OTP expired')},
             status=status.HTTP_400_BAD_REQUEST
         )
     
     if otp_session.otp_code != otp_code:
         return Response(
-            {'message': 'Invalid OTP'},
+            {'message': _('Invalid OTP')},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -153,7 +154,7 @@ def google_auth(request):
     
     if not google_data:
         return Response(
-            {'message': 'Invalid Google token'},
+            {'message': _('Invalid Google token')},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -198,7 +199,7 @@ def profile(request):
     elif request.method == 'POST':
         if user.profile_completed:
             return Response(
-                {'message': 'Profile already completed'},
+                {'message': _('Profile already completed')},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -214,7 +215,7 @@ def profile(request):
         
         return Response(UserProfileSerializer(user).data)
     
-    else:  # PUT or PATCH
+    else:
         serializer = UserProfileSerializer(user, data=request.data, partial=(request.method == 'PATCH'))
         
         if not serializer.is_valid():

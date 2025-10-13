@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 from datetime import date
+from django.utils.translation import gettext_lazy as _
 
 class SendOTPSerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=15)
@@ -30,20 +31,20 @@ class UserProfileSerializer(serializers.ModelSerializer):
         today = date.today()
         age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
         if age < 13:
-            raise serializers.ValidationError("User must be at least 13 years old.")
+            raise serializers.ValidationError(_("User must be at least 13 years old."))
         return value
     
     def validate_target_date(self, value):
         if value <= date.today():
-            raise serializers.ValidationError("Target date must be in the future.")
+            raise serializers.ValidationError(_("Target date must be in the future."))
         return value
     
     def validate(self, data):
         if data.get('current_weight') and data.get('target_weight'):
             if data['current_weight'] <= 0 or data['target_weight'] <= 0:
-                raise serializers.ValidationError("Weight values must be positive.")
+                raise serializers.ValidationError(_("Weight values must be positive."))
         if data.get('current_height') and data['current_height'] <= 0:
-            raise serializers.ValidationError("Height must be positive.")
+            raise serializers.ValidationError(_("Height must be positive."))
         return data
 
 class ProfileCreateSerializer(serializers.ModelSerializer):
@@ -59,17 +60,17 @@ class ProfileCreateSerializer(serializers.ModelSerializer):
         today = date.today()
         age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
         if age < 13:
-            raise serializers.ValidationError("User must be at least 13 years old.")
+            raise serializers.ValidationError(_("User must be at least 13 years old."))
         return value
     
     def validate_target_date(self, value):
         if value <= date.today():
-            raise serializers.ValidationError("Target date must be in the future.")
+            raise serializers.ValidationError(_("Target date must be in the future."))
         return value
     
     def validate(self, data):
         if data['current_weight'] <= 0 or data['target_weight'] <= 0:
-            raise serializers.ValidationError("Weight values must be positive.")
+            raise serializers.ValidationError(_("Weight values must be positive."))
         if data['current_height'] <= 0:
-            raise serializers.ValidationError("Height must be positive.")
+            raise serializers.ValidationError(_("Height must be positive."))
         return data

@@ -1,0 +1,135 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-13 10:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: uz\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: dietologists/serializers.py:26
+msgid "This code is already in use"
+msgstr "Bu kod allaqachon ishlatilmoqda"
+
+#: dietologists/views.py:51 dietologists/views.py:54
+msgid "Invalid credentials"
+msgstr "Kirish ma'lumotlari noto'g'ri"
+
+#: dietologists/views.py:129
+msgid "Code already in use"
+msgstr "Kod allaqachon ishlatilmoqda"
+
+#: dietologists/views.py:182
+msgid "Request approved"
+msgstr "So'rov tasdiqlandi"
+
+#: dietologists/views.py:208
+msgid "Request rejected"
+msgstr "So'rov rad etildi"
+
+#: dietologists/views.py:283
+msgid "Invalid group code"
+msgstr "Noto'g'ri guruh kodi"
+
+#: dietologists/views.py:287
+msgid "You already have an approved dietologist"
+msgstr "Sizda allaqachon tasdiqlangan dietolog bor"
+
+#: dietologists/views.py:290
+msgid "Request already pending"
+msgstr "So'rov allaqachon kutilmoqda"
+
+#: dietologists/views.py:294
+msgid "Request sent successfully"
+msgstr "So'rov muvaffaqiyatli yuborildi"
+
+#: fitora/settings.py:82
+msgid "English"
+msgstr "Inglizcha"
+
+#: fitora/settings.py:83
+msgid "Uzbek (Latin)"
+msgstr "O'zbekcha (Lotin)"
+
+#: fitora/settings.py:84
+msgid "Uzbek (Cyrillic)"
+msgstr "O'zbekcha (Kirill)"
+
+#: fitora/settings.py:85
+msgid "Russian"
+msgstr "Ruscha"
+
+#: meals/serializers.py:23 meals/serializers.py:36
+msgid "foods_data must contain a 'foods' array"
+msgstr "foods_data 'foods' massivini o'z ichiga olishi kerak"
+
+#: meals/serializers.py:25 meals/serializers.py:38
+msgid "'foods' must be an array"
+msgstr "'foods' massiv bo'lishi kerak"
+
+#: meals/views.py:182
+msgid "Analysis failed"
+msgstr "Tahlil muvaffaqiyatsiz tugadi"
+
+#: meals/views.py:268
+msgid "Date parameter is required"
+msgstr "Sana parametri talab qilinadi"
+
+#: meals/views.py:273
+msgid "Invalid date format. Use YYYY-MM-DD"
+msgstr "Noto'g'ri sana formati. YYYY-MM-DD formatidan foydalaning"
+
+#: users/serializers.py:34 users/serializers.py:63
+msgid "User must be at least 13 years old."
+msgstr "Foydalanuvchi kamida 13 yoshda bo'lishi kerak."
+
+#: users/serializers.py:39 users/serializers.py:68
+msgid "Target date must be in the future."
+msgstr "Maqsad sanasi kelajakda bo'lishi kerak."
+
+#: users/serializers.py:45 users/serializers.py:73
+msgid "Weight values must be positive."
+msgstr "Vazn qiymatlari musbat bo'lishi kerak."
+
+#: users/serializers.py:47 users/serializers.py:75
+msgid "Height must be positive."
+msgstr "Bo'y musbat bo'lishi kerak."
+
+#: users/views.py:65
+msgid "Failed to send OTP"
+msgstr "Tasdiqlash kodini yuborib bo'lmadi"
+
+#: users/views.py:73
+msgid "OTP sent successfully"
+msgstr "Tasdiqlash kodi muvaffaqiyatli yuborildi"
+
+#: users/views.py:105
+msgid "Invalid session"
+msgstr "Yaroqsiz sessiya"
+
+#: users/views.py:111
+msgid "OTP expired"
+msgstr "Tasdiqlash kodi muddati tugagan"
+
+#: users/views.py:117
+msgid "Invalid OTP"
+msgstr "Noto'g'ri tasdiqlash kodi"
+
+#: users/views.py:157
+msgid "Invalid Google token"
+msgstr "Noto'g'ri Google token"
+
+#: users/views.py:202
+msgid "Profile already completed"
+msgstr "Profil allaqachon to'ldirilgan"

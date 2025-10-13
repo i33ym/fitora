@@ -1,0 +1,134 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-13 10:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: uz-cyrl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: dietologists/serializers.py:26
+msgid "This code is already in use"
+msgstr "Бу код аллақачон ишлатилмоқда"
+
+#: dietologists/views.py:51 dietologists/views.py:54
+msgid "Invalid credentials"
+msgstr "Кириш маълумотлари нотўғри"
+
+#: dietologists/views.py:129
+msgid "Code already in use"
+msgstr "Код аллақачон ишлатилмоқда"
+
+#: dietologists/views.py:182
+msgid "Request approved"
+msgstr "Сўров тасдиқланди"
+
+#: dietologists/views.py:208
+msgid "Request rejected"
+msgstr "Сўров рад этилди"
+
+#: dietologists/views.py:283
+msgid "Invalid group code"
+msgstr "Нотўғри гурух коди"
+
+#: dietologists/views.py:287
+msgid "You already have an approved dietologist"
+msgstr "Сизда аллақачон тасдиқланган диетолог бор"
+
+#: dietologists/views.py:290
+msgid "Request already pending"
+msgstr "Сўров аллақачон кутилмоқда"
+
+#: dietologists/views.py:294
+msgid "Request sent successfully"
+msgstr "Сўров муваффақиятли юборилди"
+
+#: fitora/settings.py:82
+msgid "English"
+msgstr "Инглизча"
+
+#: fitora/settings.py:83
+msgid "Uzbek (Latin)"
+msgstr "Ўзбекча (Лотин)"
+
+#: fitora/settings.py:84
+msgid "Uzbek (Cyrillic)"
+msgstr "Ўзбекча (Кирилл)"
+
+#: fitora/settings.py:85
+msgid "Russian"
+msgstr "Русча"
+
+#: meals/serializers.py:23 meals/serializers.py:36
+msgid "foods_data must contain a 'foods' array"
+msgstr "foods_data 'foods' массивини ўз ичига олиши керак"
+
+#: meals/serializers.py:25 meals/serializers.py:38
+msgid "'foods' must be an array"
+msgstr "'foods' массив бўлиши керак"
+
+#: meals/views.py:182
+msgid "Analysis failed"
+msgstr "Таҳлил муваффақиятсиз тугади"
+
+#: meals/views.py:268
+msgid "Date parameter is required"
+msgstr "Сана параметри талаб қилинади"
+
+#: meals/views.py:273
+msgid "Invalid date format. Use YYYY-MM-DD"
+msgstr "Нотўғри сана формати. YYYY-MM-DD форматидан фойдаланинг"
+
+#: users/serializers.py:34 users/serializers.py:63
+msgid "User must be at least 13 years old."
+msgstr "Фойдаланувчи камида 13 ёшда бўлиши керак."
+
+#: users/serializers.py:39 users/serializers.py:68
+msgid "Target date must be in the future."
+msgstr "Мақсад санаси келажакда бўлиши керак."
+
+#: users/serializers.py:45 users/serializers.py:73
+msgid "Weight values must be positive."
+msgstr "Вазн қийматлари мусбат бўлиши керак."
+
+#: users/serializers.py:47 users/serializers.py:75
+msgid "Height must be positive."
+msgstr "Бўй мусбат бўлиши керак."
+
+#: users/views.py:65
+msgid "Failed to send OTP"
+msgstr "Тасдиқлаш кодини юбориб бўлмади"
+
+#: users/views.py:73
+msgid "OTP sent successfully"
+msgstr "Тасдиқлаш коди муваффақиятли юборилди"
+
+#: users/views.py:105
+msgid "Invalid session"
+msgstr "Яроқсиз сессия"
+
+#: users/views.py:111
+msgid "OTP expired"
+msgstr "Тасдиқлаш коди муддати тугаган"
+
+#: users/views.py:117
+msgid "Invalid OTP"
+msgstr "Нотўғри тасдиқлаш коди"
+
+#: users/views.py:157
+msgid "Invalid Google token"
+msgstr "Нотўғри Google token"
+
+#: users/views.py:202
+msgid "Profile already completed"
+msgstr "Профил аллақачон тўлдирилган"

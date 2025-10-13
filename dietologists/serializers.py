@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Dietologist, Group, ClientRequest
 from users.serializers import UserProfileSerializer
 from meals.serializers import MealSerializer
+from django.utils.translation import gettext_lazy as _
 
 class DietologistLoginSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
@@ -22,7 +23,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
     
     def validate_code(self, value):
         if value and Group.objects.filter(code=value).exists():
-            raise serializers.ValidationError("This code is already in use")
+            raise serializers.ValidationError(_("This code is already in use"))
         return value
 
 class UserBasicSerializer(serializers.Serializer):

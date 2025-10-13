@@ -16,6 +16,7 @@ from users.models import User
 from users.serializers import UserProfileSerializer
 from meals.models import Meal
 from meals.serializers import MealSerializer
+from django.utils.translation import gettext_lazy as _
 
 def get_tokens_for_dietologist(dietologist):
     refresh = RefreshToken()
@@ -47,10 +48,10 @@ def dietologist_login(request):
     try:
         dietologist = Dietologist.objects.get(phone_number=phone_number, is_active=True)
     except Dietologist.DoesNotExist:
-        return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': _('Invalid credentials')}, status=status.HTTP_401_UNAUTHORIZED)
     
     if not dietologist.check_password(password):
-        return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': _('Invalid credentials')}, status=status.HTTP_401_UNAUTHORIZED)
     
     tokens = get_tokens_for_dietologist(dietologist)
     return Response({
@@ -125,7 +126,7 @@ def update_group(request, pk):
     if 'code' in request.data:
         new_code = request.data['code']
         if Group.objects.filter(code=new_code).exclude(id=group.id).exists():
-            return Response({'message': 'Code already in use'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': _('Code already in use')}, status=status.HTTP_400_BAD_REQUEST)
     
     serializer = GroupSerializer(group, data=request.data, partial=True)
     if not serializer.is_valid():
@@ -178,7 +179,7 @@ def approve_request(request, pk):
     client_request.responded_at = timezone.now()
     client_request.save()
     
-    return Response({'message': 'Request approved'})
+    return Response({'message': _('Request approved')})
 
 @extend_schema(
     responses={
@@ -204,7 +205,7 @@ def reject_request(request, pk):
     client_request.responded_at = timezone.now()
     client_request.save()
     
-    return Response({'message': 'Request rejected'})
+    return Response({'message': _('Request rejected')})
 
 @extend_schema(
     responses={
@@ -279,15 +280,15 @@ def request_dietologist(request):
     try:
         group = Group.objects.get(code=group_code)
     except Group.DoesNotExist:
-        return Response({'message': 'Invalid group code'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': _('Invalid group code')}, status=status.HTTP_404_NOT_FOUND)
     
     existing_approved = ClientRequest.objects.filter(user=user, status='approved').first()
     if existing_approved:
-        return Response({'message': 'You already have an approved dietologist'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': _('You already have an approved dietologist')}, status=status.HTTP_400_BAD_REQUEST)
     
     if ClientRequest.objects.filter(user=user, group=group, status='pending').exists():
-        return Response({'message': 'Request already pending'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': _('Request already pending')}, status=status.HTTP_400_BAD_REQUEST)
     
     ClientRequest.objects.create(user=user, group=group)
     
-    return Response({'message': 'Request sent successfully'}, status=status.HTTP_201_CREATED)
+    return Response({'message': _('Request sent successfully')}, status=status.HTTP_201_CREATED)

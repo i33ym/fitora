@@ -1,0 +1,137 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-13 10:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: dietologists/serializers.py:26
+msgid "This code is already in use"
+msgstr "Этот код уже используется"
+
+#: dietologists/views.py:51 dietologists/views.py:54
+msgid "Invalid credentials"
+msgstr "Неверные учетные данные"
+
+#: dietologists/views.py:129
+msgid "Code already in use"
+msgstr "Код уже используется"
+
+#: dietologists/views.py:182
+msgid "Request approved"
+msgstr "Запрос одобрен"
+
+#: dietologists/views.py:208
+msgid "Request rejected"
+msgstr "Запрос отклонен"
+
+#: dietologists/views.py:283
+msgid "Invalid group code"
+msgstr "Неверный код группы"
+
+#: dietologists/views.py:287
+msgid "You already have an approved dietologist"
+msgstr "У вас уже есть утвержденный диетолог"
+
+#: dietologists/views.py:290
+msgid "Request already pending"
+msgstr "Запрос уже ожидает рассмотрения"
+
+#: dietologists/views.py:294
+msgid "Request sent successfully"
+msgstr "Запрос успешно отправлен"
+
+#: fitora/settings.py:82
+msgid "English"
+msgstr "Английский"
+
+#: fitora/settings.py:83
+msgid "Uzbek (Latin)"
+msgstr "Узбекский (Латиница)"
+
+#: fitora/settings.py:84
+msgid "Uzbek (Cyrillic)"
+msgstr "Узбекский (Кириллица)"
+
+#: fitora/settings.py:85
+msgid "Russian"
+msgstr "Русский"
+
+#: meals/serializers.py:23 meals/serializers.py:36
+msgid "foods_data must contain a 'foods' array"
+msgstr "foods_data должен содержать массив 'foods'"
+
+#: meals/serializers.py:25 meals/serializers.py:38
+msgid "'foods' must be an array"
+msgstr "'foods' должен быть массивом"
+
+#: meals/views.py:182
+msgid "Analysis failed"
+msgstr "Анализ не удался"
+
+#: meals/views.py:268
+msgid "Date parameter is required"
+msgstr "Параметр даты обязателен"
+
+#: meals/views.py:273
+msgid "Invalid date format. Use YYYY-MM-DD"
+msgstr "Неверный формат даты. Используйте YYYY-MM-DD"
+
+#: users/serializers.py:34 users/serializers.py:63
+msgid "User must be at least 13 years old."
+msgstr "Пользователь должен быть не моложе 13 лет."
+
+#: users/serializers.py:39 users/serializers.py:68
+msgid "Target date must be in the future."
+msgstr "Целевая дата должна быть в будущем."
+
+#: users/serializers.py:45 users/serializers.py:73
+msgid "Weight values must be positive."
+msgstr "Значения веса должны быть положительными."
+
+#: users/serializers.py:47 users/serializers.py:75
+msgid "Height must be positive."
+msgstr "Рост должен быть положительным."
+
+#: users/views.py:65
+msgid "Failed to send OTP"
+msgstr "Не удалось отправить код подтверждения"
+
+#: users/views.py:73
+msgid "OTP sent successfully"
+msgstr "Код подтверждения успешно отправлен"
+
+#: users/views.py:105
+msgid "Invalid session"
+msgstr "Недействительная сессия"
+
+#: users/views.py:111
+msgid "OTP expired"
+msgstr "Срок действия кода истек"
+
+#: users/views.py:117
+msgid "Invalid OTP"
+msgstr "Неверный код подтверждения"
+
+#: users/views.py:157
+msgid "Invalid Google token"
+msgstr "Недействительный Google токен"
+
+#: users/views.py:202
+msgid "Profile already completed"
+msgstr "Профиль уже заполнен"
