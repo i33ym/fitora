@@ -17,6 +17,14 @@ class MealSerializer(serializers.ModelSerializer):
         model = Meal
         fields = ['id', 'image_url', 'meal_date', 'foods_data', 'meal_time', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if request and obj.image_url:
+            if obj.image_url.startswith('http'):
+                return obj.image_url
+            return request.build_absolute_uri(obj.image_url)
+        return obj.image_url
     
     def validate_foods_data(self, value):
         if not isinstance(value, dict) or 'foods' not in value:

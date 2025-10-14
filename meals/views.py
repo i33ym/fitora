@@ -205,7 +205,7 @@ def meals(request):
         
         paginator = MealPagination()
         paginated_meals = paginator.paginate_queryset(meals, request)
-        serializer = MealListSerializer(paginated_meals, many=True)
+        serializer = MealListSerializer(paginated_meals, many=True, context={'request': request})
         
         return paginator.get_paginated_response(serializer.data)
     
@@ -233,7 +233,7 @@ def meal_detail(request, pk):
     meal = get_object_or_404(Meal, pk=pk, user=request.user)
     
     if request.method == 'GET':
-        serializer = MealSerializer(meal)
+        serializer = MealSerializer(meal, context={'request': request})
         return Response(serializer.data)
     
     elif request.method in ['PUT', 'PATCH']:
@@ -274,7 +274,7 @@ def daily_summary(request):
     
     meals_qs = Meal.objects.filter(
         user=request.user,
-        created_at__date=date_obj
+        meal_date=date_obj
     )
     totals = calculate_daily_totals(meals_qs)
     serializer = MealSerializer(meals_qs, many=True)
