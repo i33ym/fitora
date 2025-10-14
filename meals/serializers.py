@@ -120,16 +120,16 @@ class MealSerializer(serializers.ModelSerializer):
         if not obj.image_url:
             return None
         
-        # Already a full URL - return as-is
-        if obj.image_url.startswith('http://') or obj.image_url.startswith('https://'):
-            return obj.image_url
+        url = str(obj.image_url)
+
+        if url.startswith('http://') or url.startswith('https://'):
+            return url
         
-        # Relative path - build absolute URL
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(obj.image_url)
         
-        return obj.image_url
+        return url
     
     def validate_foods_data(self, value):
         if not isinstance(value, dict) or 'foods' not in value:
@@ -161,16 +161,16 @@ class MealListSerializer(serializers.ModelSerializer):
         if not obj.image_url:
             return None
         
-        # Already a full URL - return as-is
-        if obj.image_url.startswith('http://') or obj.image_url.startswith('https://'):
-            return obj.image_url
+        url = str(obj.image_url)
         
-        # Relative path - build absolute URL  
+        if url.startswith('http://') or url.startswith('https://'):
+            return url
+        
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(obj.image_url)
         
-        return obj.image_url
+        return url
 
 class FoodAnalysisSerializer(serializers.Serializer):
     name = serializers.CharField()
