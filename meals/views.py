@@ -277,7 +277,7 @@ def daily_summary(request):
         meal_date=date_obj
     )
     totals = calculate_daily_totals(meals_qs)
-    serializer = MealSerializer(meals_qs, many=True)
+    serializer = MealSerializer(meals_qs, many=True, context={'request': request})
     
     return Response({
         'date': date_str,
