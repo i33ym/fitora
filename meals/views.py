@@ -13,7 +13,8 @@ from datetime import datetime
 from .serializers import (
     MealSerializer, MealCreateSerializer, MealListSerializer, 
     MealAnalyzeSerializer, MealAnalysisResponseSerializer, 
-    DailySummaryResponseSerializer
+    DailySummaryResponseSerializer, VoiceAnalyzeSerializer,
+    VoiceAnalysisResponseSerializer
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -180,6 +181,80 @@ def analyze_meal(request):
         default_storage.delete(path)
         return Response(
             {'message': _('Analysis failed')},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+@extend_schema(
+    request={
+        'multipart/form-data': {
+            'type': 'object',
+            'properties': {
+                'audio': {
+                    'type': 'string',
+                    'format': 'binary',
+                    'description': 'Audio file in WAV format (max 45 seconds)'
+                },
+                'meal_date': {
+                    'type': 'string',
+                    'format': 'date',
+                    'description': 'Date of the meal (YYYY-MM-DD). Defaults to today if not provided.'
+                },
+                'meal_time': {
+                    'type': 'string',
+                    'enum': ['breakfast', 'lunch', 'dinner', 'snack'],
+                    'description': 'Optional meal time'
+                },
+                'language': {
+                    'type': 'string',
+                    'enum': ['en', 'uz', 'uz-cyrl', 'ru'],
+                    'description': 'Language for transcription (defaults to uz)'
+                }
+            },
+            'required': ['audio']
+        }
+    },
+    responses={
+        200: OpenApiResponse(response=VoiceAnalysisResponseSerializer, description='Voice analysis complete'),
+        400: OpenApiResponse(description='Invalid data'),
+        500: OpenApiResponse(description='Analysis failed')
+    },
+    tags=['Meals']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def analyze_voice(request):
+    serializer = VoiceAnalyzeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    audio = serializer.validated_data['audio']
+    meal_date = serializer.validated_data.get('meal_date', datetime.now().date())
+    meal_time = serializer.validated_data.get('meal_time')
+    language = serializer.validated_data.get('language', 'uz')
+    
+    # Save audio file
+    filename = f"meals/audio/{meal_date.year}/{meal_date.month:02d}/{meal_date.day:02d}/{audio.name}"
+    path = default_storage.save(filename, ContentFile(audio.read()))
+    audio_url = request.build_absolute_uri(default_storage.url(path))
+    
+    # Read audio data for OpenAI
+    audio.seek(0)
+    audio_data = audio.read()
+    
+    try:
+        from .services import analyze_meal_voice
+        analysis_result = analyze_meal_voice(audio_data, language)
+        
+        return Response({
+            'transcription': analysis_result.get('transcription', ''),
+            'audio_url': audio_url,
+            'foods': analysis_result['foods']
+        })
+    except Exception as e:
+        # If analysis fails, delete the uploaded audio
+        default_storage.delete(path)
+        return Response(
+            {'message': _('Analysis failed: ') + str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
