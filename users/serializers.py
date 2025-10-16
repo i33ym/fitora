@@ -21,7 +21,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'phone_number', 'first_name', 'last_name', 
-            'gender', 'date_of_birth', 'current_height', 'current_weight',
+            'gender', 'date_of_birth', 'height', 'current_weight',
             'target_weight', 'target_date', 'activeness_level', 'goal', 'motivation',
             'preferred_diet', 'diet_restrictions', 'profile_completed'
         ]
@@ -43,7 +43,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if data.get('current_weight') and data.get('target_weight'):
             if data['current_weight'] <= 0 or data['target_weight'] <= 0:
                 raise serializers.ValidationError(_("Weight values must be positive."))
-        if data.get('current_height') and data['current_height'] <= 0:
+        if data.get('height') and data['height'] <= 0:
             raise serializers.ValidationError(_("Height must be positive."))
         return data
 
@@ -52,7 +52,7 @@ class ProfileCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'first_name', 'last_name', 'gender', 'date_of_birth',
-            'current_height', 'current_weight', 'target_weight', 'target_date',
+            'height', 'current_weight', 'target_weight', 'target_date',
             'activeness_level', 'goal', 'motivation', 'preferred_diet', 'diet_restrictions'
         ]
     
@@ -71,6 +71,6 @@ class ProfileCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['current_weight'] <= 0 or data['target_weight'] <= 0:
             raise serializers.ValidationError(_("Weight values must be positive."))
-        if data['current_height'] <= 0:
+        if data['height'] <= 0:
             raise serializers.ValidationError(_("Height must be positive."))
         return data
