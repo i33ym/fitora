@@ -64,7 +64,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     
-    current_height = models.FloatField(null=True, blank=True)
+    height = models.FloatField(null=True, blank=True)
     current_weight = models.FloatField(null=True, blank=True)
     target_weight = models.FloatField(null=True, blank=True)
     target_date = models.DateField(null=True, blank=True)
