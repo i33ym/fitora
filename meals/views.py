@@ -158,14 +158,21 @@ def calculate_daily_totals(meals):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def analyze_meal(request):
+    print("=== DEBUG: analyze_meal called ===")
+    print(f"Files: {request.FILES}")
+    print(f"Data: {request.data}")
+    
     serializer = MealAnalyzeSerializer(data=request.data)
     if not serializer.is_valid():
+        print(f"Serializer errors: {serializer.errors}")
         return error_response(
             message=_('Validation error'),
             errors=serializer.errors,
             code='validation_error',
             status_code=status.HTTP_400_BAD_REQUEST
         )
+    
+    print("=== DEBUG: Serializer valid ===")
     
     image = serializer.validated_data['image']
     meal_date = serializer.validated_data.get('meal_date', datetime.now().date())
