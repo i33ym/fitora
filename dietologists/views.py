@@ -1,22 +1,38 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import Dietologist, Group, ClientRequest
 from .serializers import (
     DietologistLoginSerializer, GroupSerializer, GroupCreateSerializer,
-    ClientRequestSerializer, ClientDetailSerializer, RequestDietologistSerializer
+    ClientRequestSerializer, RequestDietologistSerializer
 )
-from .middleware import DietologistJWTAuthentication
-from users.models import User
 from users.serializers import UserProfileSerializer
 from meals.models import Meal
 from meals.serializers import MealSerializer
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
+from common.responses import success_response, error_response
+
+def get_dietologist_from_request(request):
+    """Extract and validate dietologist from JWT token"""
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None
+    
+    token_string = auth_header.split(' ')[1]
+    
+    try:
+        from rest_framework_simplejwt.tokens import AccessToken
+        token = AccessToken(token_string)
+        if token.get('type') != 'dietologist':
+            return None
+        
+        dietologist_id = token.get('dietologist_id')
+        return Dietologist.objects.get(id=dietologist_id, is_active=True)
+    except Exception:
+        return None
 
 def get_tokens_for_dietologist(dietologist):
     refresh = RefreshToken()
@@ -27,20 +43,16 @@ def get_tokens_for_dietologist(dietologist):
         'refresh_token': str(refresh),
     }
 
-@extend_schema(
-    request=DietologistLoginSerializer,
-    responses={
-        200: OpenApiResponse(description='Login successful'),
-        401: OpenApiResponse(description='Invalid credentials')
-    },
-    tags=['Dietologist']
-)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def dietologist_login(request):
     serializer = DietologistLoginSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Validation error'),
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     phone_number = serializer.validated_data['phone_number']
     password = serializer.validated_data['password']
@@ -48,39 +60,47 @@ def dietologist_login(request):
     try:
         dietologist = Dietologist.objects.get(phone_number=phone_number, is_active=True)
     except Dietologist.DoesNotExist:
-        return Response({'message': _('Invalid credentials')}, status=status.HTTP_401_UNAUTHORIZED)
+        return error_response(
+            message=_('Invalid credentials'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     if not dietologist.check_password(password):
-        return Response({'message': _('Invalid credentials')}, status=status.HTTP_401_UNAUTHORIZED)
+        return error_response(
+            message=_('Invalid credentials'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     tokens = get_tokens_for_dietologist(dietologist)
-    return Response({
-        **tokens,
-        'dietologist': {
-            'id': dietologist.id,
-            'first_name': dietologist.first_name,
-            'last_name': dietologist.last_name,
-            'phone_number': dietologist.phone_number
+    return success_response(
+        data={
+            **tokens,
+            'dietologist': {
+                'id': dietologist.id,
+                'first_name': dietologist.first_name,
+                'last_name': dietologist.last_name,
+                'phone_number': dietologist.phone_number
+            }
         }
-    })
+    )
 
-@extend_schema(
-    request=GroupCreateSerializer,
-    responses={
-        201: OpenApiResponse(response=GroupSerializer, description='Group created'),
-        400: OpenApiResponse(description='Invalid data')
-    },
-    tags=['Dietologist']
-)
 @api_view(['POST'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def create_group(request):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     serializer = GroupCreateSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Validation error'),
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     code = serializer.validated_data.get('code') or Group.generate_code()
     
@@ -90,62 +110,65 @@ def create_group(request):
         code=code
     )
     
-    return Response(GroupSerializer(group).data, status=status.HTTP_201_CREATED)
+    return success_response(
+        data=GroupSerializer(group).data,
+        status_code=status.HTTP_201_CREATED
+    )
 
-@extend_schema(
-    responses={
-        200: OpenApiResponse(response=GroupSerializer(many=True), description='List of groups')
-    },
-    tags=['Dietologist']
-)
 @api_view(['GET'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def list_groups(request):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+    
     groups = Group.objects.filter(dietologist=dietologist)
     serializer = GroupSerializer(groups, many=True)
-    return Response(serializer.data)
+    return success_response(data=serializer.data)
 
-@extend_schema(
-    request=GroupSerializer,
-    responses={
-        200: OpenApiResponse(response=GroupSerializer, description='Group updated'),
-        400: OpenApiResponse(description='Invalid data'),
-        404: OpenApiResponse(description='Group not found')
-    },
-    tags=['Dietologist']
-)
 @api_view(['PATCH'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def update_group(request, pk):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+    
     group = get_object_or_404(Group, pk=pk, dietologist=dietologist)
     
     if 'code' in request.data:
         new_code = request.data['code']
         if Group.objects.filter(code=new_code).exclude(id=group.id).exists():
-            return Response({'message': _('Code already in use')}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message=_('Code already in use'),
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
     
     serializer = GroupSerializer(group, data=request.data, partial=True)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Validation error'),
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     serializer.save()
-    return Response(serializer.data)
+    return success_response(data=serializer.data)
 
-@extend_schema(
-    responses={
-        200: OpenApiResponse(response=ClientRequestSerializer(many=True), description='Pending requests')
-    },
-    tags=['Dietologist']
-)
 @api_view(['GET'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def pending_requests(request):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     requests_qs = ClientRequest.objects.filter(
         group__dietologist=dietologist,
@@ -153,20 +176,17 @@ def pending_requests(request):
     ).select_related('user', 'group')
     
     serializer = ClientRequestSerializer(requests_qs, many=True)
-    return Response(serializer.data)
+    return success_response(data=serializer.data)
 
-@extend_schema(
-    responses={
-        200: OpenApiResponse(description='Request approved'),
-        404: OpenApiResponse(description='Request not found')
-    },
-    tags=['Dietologist']
-)
 @api_view(['POST'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def approve_request(request, pk):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     client_request = get_object_or_404(
         ClientRequest,
@@ -179,20 +199,17 @@ def approve_request(request, pk):
     client_request.responded_at = timezone.now()
     client_request.save()
     
-    return Response({'message': _('Request approved')})
+    return success_response(message=_('Request approved'))
 
-@extend_schema(
-    responses={
-        200: OpenApiResponse(description='Request rejected'),
-        404: OpenApiResponse(description='Request not found')
-    },
-    tags=['Dietologist']
-)
 @api_view(['POST'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def reject_request(request, pk):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     client_request = get_object_or_404(
         ClientRequest,
@@ -205,19 +222,17 @@ def reject_request(request, pk):
     client_request.responded_at = timezone.now()
     client_request.save()
     
-    return Response({'message': _('Request rejected')})
+    return success_response(message=_('Request rejected'))
 
-@extend_schema(
-    responses={
-        200: OpenApiResponse(response=UserProfileSerializer(many=True), description='List of clients')
-    },
-    tags=['Dietologist']
-)
 @api_view(['GET'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def list_clients(request):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     approved_requests = ClientRequest.objects.filter(
         group__dietologist=dietologist,
@@ -226,20 +241,17 @@ def list_clients(request):
     
     clients = [req.user for req in approved_requests]
     serializer = UserProfileSerializer(clients, many=True)
-    return Response(serializer.data)
+    return success_response(data=serializer.data)
 
-@extend_schema(
-    responses={
-        200: OpenApiResponse(response=ClientDetailSerializer, description='Client details with meals'),
-        404: OpenApiResponse(description='Client not found')
-    },
-    tags=['Dietologist']
-)
 @api_view(['GET'])
-@authentication_classes([DietologistJWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def client_detail(request, user_id):
-    dietologist = request.user
+    dietologist = get_dietologist_from_request(request)
+    if not dietologist:
+        return error_response(
+            message=_('Unauthorized'),
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
     
     client_request = get_object_or_404(
         ClientRequest,
@@ -251,21 +263,14 @@ def client_detail(request, user_id):
     user = client_request.user
     meals = Meal.objects.filter(user=user).order_by('-meal_date', '-created_at')
     
-    return Response({
-        'profile': UserProfileSerializer(user).data,
-        'meals': MealSerializer(meals, many=True).data,
-        'total_meals': meals.count()
-    })
+    return success_response(
+        data={
+            'profile': UserProfileSerializer(user).data,
+            'meals': MealSerializer(meals, many=True, context={'request': request}).data,
+            'total_meals': meals.count()
+        }
+    )
 
-@extend_schema(
-    request=RequestDietologistSerializer,
-    responses={
-        201: OpenApiResponse(description='Request sent successfully'),
-        400: OpenApiResponse(description='Invalid group code or already requested'),
-        404: OpenApiResponse(description='Group not found')
-    },
-    tags=['User']
-)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def request_dietologist(request):
@@ -273,22 +278,38 @@ def request_dietologist(request):
     
     serializer = RequestDietologistSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Validation error'),
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     group_code = serializer.validated_data['group_code']
     
     try:
         group = Group.objects.get(code=group_code)
     except Group.DoesNotExist:
-        return Response({'message': _('Invalid group code')}, status=status.HTTP_404_NOT_FOUND)
+        return error_response(
+            message=_('Invalid group code'),
+            status_code=status.HTTP_404_NOT_FOUND
+        )
     
     existing_approved = ClientRequest.objects.filter(user=user, status='approved').first()
     if existing_approved:
-        return Response({'message': _('You already have an approved dietologist')}, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('You already have an approved dietologist'),
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     if ClientRequest.objects.filter(user=user, group=group, status='pending').exists():
-        return Response({'message': _('Request already pending')}, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Request already pending'),
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     ClientRequest.objects.create(user=user, group=group)
     
-    return Response({'message': _('Request sent successfully')}, status=status.HTTP_201_CREATED)
+    return success_response(
+        message=_('Request sent successfully'),
+        status_code=status.HTTP_201_CREATED
+    )

@@ -1,0 +1,338 @@
+{
+	"info": {
+		"_postman_id": "fitora-dietologist-api",
+		"name": "Fitora Dietologist API",
+		"description": "Complete API documentation for Fitora dietologist dashboard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data.access_token) {",
+									"        pm.environment.set(\"dietologist_token\", jsonData.data.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz",
+								"description": "Language: en, uz, uz-cyrl, ru"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"+998901234567\",\n    \"password\": \"your-password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/dietologist/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"login"
+							]
+						},
+						"description": "Login as dietologist and get access token. Auto-saves token to environment."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Groups",
+			"item": [
+				{
+					"name": "Create Group",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Weight Loss Group\",\n    \"code\": \"ABC123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/dietologist/groups",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"groups"
+							]
+						},
+						"description": "Create a new client group. Code is optional (auto-generated if not provided)."
+					},
+					"response": []
+				},
+				{
+					"name": "List Groups",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dietologist/groups",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"groups"
+							]
+						},
+						"description": "Get all groups belonging to this dietologist"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Group",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Group Name\",\n    \"code\": \"XYZ789\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/dietologist/groups/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"groups",
+								"1"
+							]
+						},
+						"description": "Update group name or code. Replace '1' with actual group ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Client Requests",
+			"item": [
+				{
+					"name": "Pending Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dietologist/requests/pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"requests",
+								"pending"
+							]
+						},
+						"description": "Get all pending client requests"
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dietologist/requests/1/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"requests",
+								"1",
+								"approve"
+							]
+						},
+						"description": "Approve a client request. Replace '1' with actual request ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dietologist/requests/1/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"requests",
+								"1",
+								"reject"
+							]
+						},
+						"description": "Reject a client request. Replace '1' with actual request ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Clients",
+			"item": [
+				{
+					"name": "List Clients",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dietologist/clients",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"clients"
+							]
+						},
+						"description": "Get all approved clients"
+					},
+					"response": []
+				},
+				{
+					"name": "Client Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dietologist_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dietologist/clients/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"clients",
+								"1"
+							]
+						},
+						"description": "Get client profile and all their meals. Replace '1' with actual user ID."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://endpoints.fitora.uz",
+			"type": "string"
+		},
+		{
+			"key": "dietologist_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

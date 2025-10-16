@@ -1,22 +1,18 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from datetime import datetime
 from .models import Meal
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from datetime import datetime
 from .serializers import (
     MealSerializer, MealCreateSerializer, MealListSerializer, 
-    MealAnalyzeSerializer, MealAnalysisResponseSerializer, 
-    DailySummaryResponseSerializer, VoiceAnalyzeSerializer,
-    VoiceAnalysisResponseSerializer
+    MealAnalyzeSerializer, VoiceAnalyzeSerializer
 )
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
+from common.responses import success_response, error_response
 
 def calculate_daily_totals(meals):
     """Calculate total nutritional values from all meals"""
@@ -120,43 +116,16 @@ def calculate_daily_totals(meals):
         'total_sodium': f"{totals['sodium']:.1f} mg",
     }
 
-@extend_schema(
-    request={
-        'multipart/form-data': {
-            'type': 'object',
-            'properties': {
-                'image': {
-                    'type': 'string',
-                    'format': 'binary',
-                    'description': 'Meal image file'
-                },
-                'meal_date': {
-                    'type': 'string',
-                    'format': 'date',
-                    'description': 'Date of the meal (YYYY-MM-DD). Defaults to today if not provided.'
-                },
-                'meal_time': {
-                    'type': 'string',
-                    'enum': ['breakfast', 'lunch', 'dinner', 'snack'],
-                    'description': 'Optional meal time'
-                }
-            },
-            'required': ['image']
-        }
-    },
-    responses={
-        200: OpenApiResponse(response=MealAnalysisResponseSerializer, description='Meal analysis complete'),
-        400: OpenApiResponse(description='Invalid data'),
-        500: OpenApiResponse(description='Analysis failed')
-    },
-    tags=['Meals']
-)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def analyze_meal(request):
     serializer = MealAnalyzeSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Validation error'),
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     image = serializer.validated_data['image']
     meal_date = serializer.validated_data.get('meal_date', datetime.now().date())
@@ -173,71 +142,41 @@ def analyze_meal(request):
         from .services import analyze_meal_image
         analysis_result = analyze_meal_image(image_data)
         
-        return Response({
-            'image_url': image_url,
-            'foods': analysis_result['foods']
-        })
+        return success_response(
+            data={
+                'image_url': image_url,
+                'foods': analysis_result['foods']
+            }
+        )
     except Exception as e:
         default_storage.delete(path)
-        return Response(
-            {'message': _('Analysis failed')},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        return error_response(
+            message=_('Analysis failed'),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
-@extend_schema(
-    request={
-        'multipart/form-data': {
-            'type': 'object',
-            'properties': {
-                'audio': {
-                    'type': 'string',
-                    'format': 'binary',
-                    'description': 'Audio file in WAV format (max 45 seconds)'
-                },
-                'meal_date': {
-                    'type': 'string',
-                    'format': 'date',
-                    'description': 'Date of the meal (YYYY-MM-DD). Defaults to today if not provided.'
-                },
-                'meal_time': {
-                    'type': 'string',
-                    'enum': ['breakfast', 'lunch', 'dinner', 'snack'],
-                    'description': 'Optional meal time'
-                },
-                'language': {
-                    'type': 'string',
-                    'enum': ['en', 'uz', 'uz-cyrl', 'ru'],
-                    'description': 'Language for transcription (defaults to uz)'
-                }
-            },
-            'required': ['audio']
-        }
-    },
-    responses={
-        200: OpenApiResponse(response=VoiceAnalysisResponseSerializer, description='Voice analysis complete'),
-        400: OpenApiResponse(description='Invalid data'),
-        500: OpenApiResponse(description='Analysis failed')
-    },
-    tags=['Meals']
-)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def analyze_voice(request):
+    from django.utils.translation import get_language_from_request
+    
     serializer = VoiceAnalyzeSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Validation error'),
+            errors=serializer.errors,
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     audio = serializer.validated_data['audio']
     meal_date = serializer.validated_data.get('meal_date', datetime.now().date())
     meal_time = serializer.validated_data.get('meal_time')
-    language = serializer.validated_data.get('language', 'uz')
+    language = serializer.validated_data.get('language') or get_language_from_request(request)
     
-    # Save audio file
     filename = f"meals/audio/{meal_date.year}/{meal_date.month:02d}/{meal_date.day:02d}/{audio.name}"
     path = default_storage.save(filename, ContentFile(audio.read()))
     audio_url = request.build_absolute_uri(default_storage.url(path))
     
-    # Read audio data for OpenAI
     audio.seek(0)
     audio_data = audio.read()
     
@@ -245,17 +184,18 @@ def analyze_voice(request):
         from .services import analyze_meal_voice
         analysis_result = analyze_meal_voice(audio_data, language)
         
-        return Response({
-            'transcription': analysis_result.get('transcription', ''),
-            'audio_url': audio_url,
-            'foods': analysis_result['foods']
-        })
+        return success_response(
+            data={
+                'transcription': analysis_result.get('transcription', ''),
+                'audio_url': audio_url,
+                'foods': analysis_result['foods']
+            }
+        )
     except Exception as e:
-        # If analysis fails, delete the uploaded audio
         default_storage.delete(path)
-        return Response(
-            {'message': _('Analysis failed: ') + str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        return error_response(
+            message=_('Analysis failed: ') + str(e),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
 class MealPagination(PageNumberPagination):
@@ -263,23 +203,14 @@ class MealPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
-@extend_schema(
-    request=MealCreateSerializer,
-    responses={
-        200: OpenApiResponse(response=MealListSerializer(many=True), description='List of meals'),
-        201: OpenApiResponse(response=MealSerializer, description='Meal created successfully'),
-        400: OpenApiResponse(description='Invalid data')
-    },
-    tags=['Meals']
-)
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def meals(request):
     if request.method == 'GET':
-        meals = Meal.objects.filter(user=request.user)
+        meals_qs = Meal.objects.filter(user=request.user)
         
         paginator = MealPagination()
-        paginated_meals = paginator.paginate_queryset(meals, request)
+        paginated_meals = paginator.paginate_queryset(meals_qs, request)
         serializer = MealListSerializer(paginated_meals, many=True, context={'request': request})
         
         return paginator.get_paginated_response(serializer.data)
@@ -287,21 +218,18 @@ def meals(request):
     elif request.method == 'POST':
         serializer = MealCreateSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message=_('Validation error'),
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         
         meal = serializer.save(user=request.user)
-        return Response(MealSerializer(meal).data, status=status.HTTP_201_CREATED)
+        return success_response(
+            data=MealSerializer(meal, context={'request': request}).data,
+            status_code=status.HTTP_201_CREATED
+        )
 
-@extend_schema(
-    request=MealSerializer,
-    responses={
-        200: OpenApiResponse(response=MealSerializer, description='Meal operation successful'),
-        204: OpenApiResponse(description='Meal deleted successfully'),
-        400: OpenApiResponse(description='Invalid data'),
-        404: OpenApiResponse(description='Meal not found')
-    },
-    tags=['Meals']
-)
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def meal_detail(request, pk):
@@ -309,43 +237,46 @@ def meal_detail(request, pk):
     
     if request.method == 'GET':
         serializer = MealSerializer(meal, context={'request': request})
-        return Response(serializer.data)
+        return success_response(data=serializer.data)
     
     elif request.method in ['PUT', 'PATCH']:
-        serializer = MealSerializer(meal, data=request.data, partial=(request.method == 'PATCH'))
+        serializer = MealSerializer(meal, data=request.data, partial=(request.method == 'PATCH'), context={'request': request})
         
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                message=_('Validation error'),
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         
         serializer.save()
-        return Response(serializer.data)
+        return success_response(data=serializer.data)
     
     elif request.method == 'DELETE':
         meal.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return success_response(
+            message=_('Meal deleted successfully'),
+            status_code=status.HTTP_204_NO_CONTENT
+        )
 
-@extend_schema(
-    parameters=[
-        OpenApiParameter(name='date', description='Date in YYYY-MM-DD format', required=True, type=str)
-    ],
-    responses={
-        200: OpenApiResponse(response=DailySummaryResponseSerializer, description='Daily meal summary with totals'),
-        400: OpenApiResponse(description='Invalid date format')
-    },
-    tags=['Meals']
-)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def daily_summary(request):
     date_str = request.query_params.get('date')
     
     if not date_str:
-        return Response({'message': _('Date parameter is required')}, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Date parameter is required'),
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     try:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        return Response({'message': _('Invalid date format. Use YYYY-MM-DD')}, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            message=_('Invalid date format. Use YYYY-MM-DD'),
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
     
     meals_qs = Meal.objects.filter(
         user=request.user,
@@ -354,9 +285,11 @@ def daily_summary(request):
     totals = calculate_daily_totals(meals_qs)
     serializer = MealSerializer(meals_qs, many=True, context={'request': request})
     
-    return Response({
-        'date': date_str,
-        'meals': serializer.data,
-        'total_meals': meals_qs.count(),
-        **totals
-    })
+    return success_response(
+        data={
+            'date': date_str,
+            'meals': serializer.data,
+            'total_meals': meals_qs.count(),
+            **totals
+        }
+    )

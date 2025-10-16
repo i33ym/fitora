@@ -1,0 +1,677 @@
+{
+	"info": {
+		"_postman_id": "fitora-user-api",
+		"name": "Fitora User API",
+		"description": "Complete API documentation for Fitora mobile app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz",
+								"description": "Language: en, uz, uz-cyrl, ru"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"+998901234567\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/sms/send-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sms",
+								"send-otp"
+							]
+						},
+						"description": "Send OTP code to phone number for authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"+998901234567\",\n    \"session\": \"session-uuid-here\",\n    \"otp\": \"123456\",\n    \"fcm_token\": \"firebase-token-here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/sms/verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"sms",
+								"verify-otp"
+							]
+						},
+						"description": "Verify OTP code and get access token. Auto-saves token to environment."
+					},
+					"response": []
+				},
+				{
+					"name": "Google Auth",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"google_token\": \"google-id-token-here\",\n    \"fcm_token\": \"firebase-token-here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/google",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"google"
+							]
+						},
+						"description": "Authenticate with Google and get access token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile"
+							]
+						},
+						"description": "Get user profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"date_of_birth\": \"1990-01-15\",\n    \"gender\": \"male\",\n    \"height\": 175,\n    \"current_weight\": 80.5,\n    \"target_weight\": 75.0,\n    \"target_date\": \"2025-12-31\",\n    \"activity_level\": \"moderate\",\n    \"goal\": \"lose_weight\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile"
+							]
+						},
+						"description": "Create user profile (first time only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile (Full)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"date_of_birth\": \"1990-01-15\",\n    \"gender\": \"male\",\n    \"height\": 175,\n    \"current_weight\": 78.0,\n    \"target_weight\": 75.0,\n    \"target_date\": \"2025-12-31\",\n    \"activity_level\": \"moderate\",\n    \"goal\": \"lose_weight\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile"
+							]
+						},
+						"description": "Update entire profile (all fields required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile (Partial)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_weight\": 77.5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"profile"
+							]
+						},
+						"description": "Update specific profile fields only"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Meals",
+			"item": [
+				{
+					"name": "Analyze Meal (Image)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "meal_date",
+									"value": "2025-10-14",
+									"type": "text"
+								},
+								{
+									"key": "meal_time",
+									"value": "lunch",
+									"description": "breakfast, lunch, dinner, or snack",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/meals/analyze",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"analyze"
+							]
+						},
+						"description": "Analyze meal from image using AI"
+					},
+					"response": []
+				},
+				{
+					"name": "Analyze Meal (Voice)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "audio",
+									"type": "file",
+									"src": [],
+									"description": "WAV audio file (max 45 seconds)"
+								},
+								{
+									"key": "meal_date",
+									"value": "2025-10-14",
+									"type": "text"
+								},
+								{
+									"key": "meal_time",
+									"value": "lunch",
+									"type": "text"
+								},
+								{
+									"key": "language",
+									"value": "uz",
+									"description": "Optional: en, uz, uz-cyrl, ru",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/meals/analyze-voice",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"analyze-voice"
+							]
+						},
+						"description": "Analyze meal from voice description"
+					},
+					"response": []
+				},
+				{
+					"name": "List Meals",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meals?page=1&page_size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of user's meals"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Meal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"image_url\": \"https://endpoints.fitora.uz/media/meals/2025/10/14/meal.jpg\",\n    \"meal_date\": \"2025-10-14\",\n    \"meal_time\": \"lunch\",\n    \"foods_data\": {\n        \"foods\": [\n            {\n                \"name\": \"Plov\",\n                \"portion_size\": \"1 serving (300g)\",\n                \"nutritions\": {\n                    \"calories\": \"450 kcal\",\n                    \"carbs\": \"60 g\",\n                    \"fat\": \"15 g\",\n                    \"protein\": \"20 g\"\n                },\n                \"minerals\": {\n                    \"calcium\": \"50 mg\",\n                    \"iron\": \"3 mg\",\n                    \"magnesium\": \"80 mg\",\n                    \"potassium\": \"300 mg\",\n                    \"zinc\": \"2 mg\"\n                },\n                \"vitamins\": {\n                    \"vitamin_a\": \"100 mcg\",\n                    \"vitamin_b12\": \"0.5 mcg\",\n                    \"vitamin_b9\": \"50 mcg\",\n                    \"vitamin_c\": \"5 mg\",\n                    \"vitamin_d\": \"1 mcg\"\n                },\n                \"additional\": {\n                    \"cholesterol\": \"30 mg\",\n                    \"fiber\": \"3 g\",\n                    \"omega_3\": \"0.2 g\",\n                    \"saturated_fat\": \"5 g\",\n                    \"sodium\": \"400 mg\"\n                }\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/meals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals"
+							]
+						},
+						"description": "Manually create a meal entry"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Meal Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"1"
+							]
+						},
+						"description": "Get details of a specific meal"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Meal (Full)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"image_url\": \"https://endpoints.fitora.uz/media/meals/2025/10/14/meal.jpg\",\n    \"meal_date\": \"2025-10-14\",\n    \"meal_time\": \"dinner\",\n    \"foods_data\": {\n        \"foods\": [\n            {\n                \"name\": \"Updated Meal\",\n                \"portion_size\": \"1 serving\",\n                \"nutritions\": {\n                    \"calories\": \"400 kcal\",\n                    \"carbs\": \"50 g\",\n                    \"fat\": \"10 g\",\n                    \"protein\": \"25 g\"\n                },\n                \"minerals\": {},\n                \"vitamins\": {},\n                \"additional\": {}\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/meals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"1"
+							]
+						},
+						"description": "Update entire meal (all fields required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Meal (Partial)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"meal_time\": \"snack\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/meals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"1"
+							]
+						},
+						"description": "Update specific meal fields only"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Meal",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"1"
+							]
+						},
+						"description": "Delete a meal"
+					},
+					"response": []
+				},
+				{
+					"name": "Daily Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/meals/daily?date=2025-10-14",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"meals",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-10-14"
+								}
+							]
+						},
+						"description": "Get all meals and nutritional totals for a specific date"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dietologist",
+			"item": [
+				{
+					"name": "Request Dietologist",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "uz"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"group_code\": \"ABC123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/dietologist/request",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dietologist",
+								"request"
+							]
+						},
+						"description": "Request to join a dietologist's group using group code"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://endpoints.fitora.uz",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
