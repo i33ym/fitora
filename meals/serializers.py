@@ -69,6 +69,8 @@ class MealSerializer(serializers.ModelSerializer):
         return value
 
 class MealCreateSerializer(serializers.ModelSerializer):
+    image_url = serializers.CharField(required=True)
+    
     class Meta:
         model = Meal
         fields = ['image_url', 'meal_date', 'foods_data', 'meal_time']
