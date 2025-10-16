@@ -43,4 +43,6 @@ class Food(BaseModel):
     fats: Fats = Field(description="Fats content")
 
 class MealAnalysis(BaseModel):
+    is_food: bool = Field(description="Whether the image contains actual food or beverages")
+    confidence: str = Field(description="Confidence level of detection: high, medium, or low")
     foods: List[Food] = Field(description="List of all identified food items in the image")

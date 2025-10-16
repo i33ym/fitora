@@ -116,6 +116,45 @@ def calculate_daily_totals(meals):
         'total_sodium': f"{totals['sodium']:.1f} mg",
     }
 
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def analyze_meal(request):
+#     serializer = MealAnalyzeSerializer(data=request.data)
+#     if not serializer.is_valid():
+#         return error_response(
+#             message=_('Validation error'),
+#             errors=serializer.errors,
+#             status_code=status.HTTP_400_BAD_REQUEST
+#         )
+    
+#     image = serializer.validated_data['image']
+#     meal_date = serializer.validated_data.get('meal_date', datetime.now().date())
+#     meal_time = serializer.validated_data.get('meal_time')
+
+#     filename = f"meals/{meal_date.year}/{meal_date.month:02d}/{meal_date.day:02d}/{image.name}"
+#     path = default_storage.save(filename, ContentFile(image.read()))
+#     image_url = request.build_absolute_uri(default_storage.url(path))
+
+#     image.seek(0)
+#     image_data = image.read()
+
+#     try:
+#         from .services import analyze_meal_image
+#         analysis_result = analyze_meal_image(image_data)
+        
+#         return success_response(
+#             data={
+#                 'image_url': image_url,
+#                 'foods': analysis_result['foods']
+#             }
+#         )
+#     except Exception as e:
+#         default_storage.delete(path)
+#         return error_response(
+#             message=_('Analysis failed'),
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+#         )
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def analyze_meal(request):
@@ -124,6 +163,7 @@ def analyze_meal(request):
         return error_response(
             message=_('Validation error'),
             errors=serializer.errors,
+            code='validation_error',
             status_code=status.HTTP_400_BAD_REQUEST
         )
     
@@ -140,11 +180,25 @@ def analyze_meal(request):
 
     try:
         from .services import analyze_meal_image
-        analysis_result = analyze_meal_image(image_data)
+        from django.utils.translation import get_language_from_request
+        
+        language = get_language_from_request(request)
+        analysis_result = analyze_meal_image(image_data, language)
+        
+        # Check if the image contains food
+        if not analysis_result.get('is_food', False):
+            # Delete the uploaded image since it's not food
+            default_storage.delete(path)
+            return error_response(
+                message=_('No food detected in image. Please upload an image of food or a meal.'),
+                code='not_food',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
         
         return success_response(
             data={
                 'image_url': image_url,
+                'confidence': analysis_result.get('confidence', 'medium'),
                 'foods': analysis_result['foods']
             }
         )
@@ -152,6 +206,7 @@ def analyze_meal(request):
         default_storage.delete(path)
         return error_response(
             message=_('Analysis failed'),
+            code='analysis_failed',
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

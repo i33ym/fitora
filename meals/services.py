@@ -4,64 +4,18 @@ from .schemas import MealAnalysis
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-# def analyze_meal_image(image_data: bytes) -> dict:
-#     """
-#     Analyze meal image using OpenAI and return structured nutritional data
-#     """
-#     try:
-#         base64_image = base64.b64encode(image_data).decode('utf-8')
-        
-#         response = client.responses.parse(
-#             model="gpt-4o-mini",
-#             input=[
-#                 {
-#                     "role": "system",
-#                     "content": "You are a professional nutritionist and food analysis expert. Analyze meal images and provide detailed nutritional information for each food item detected. Be accurate and thorough in your analysis."
-#                 },
-#                 {
-#                     "role": "user",
-#                     "content": [
-#                         {
-#                             "type": "input_text",
-#                             "text": """Analyze this meal photo in detail. For each food item you can identify:
-# 1. Identify the food name clearly
-# 2. Estimate the portion size (e.g., '1 burger (250g)', 'medium serving (150g)')
-# 3. Provide complete nutritional information including:
-#    - Macronutrients (calories, carbs, fat, protein)
-#    - Minerals (calcium, iron, magnesium, potassium, zinc)
-#    - Vitamins (A, B9, B12, C, D)
-#    - Additional nutrients (cholesterol, fiber, omega-3, saturated fat, sodium)
-
-# Use appropriate units: kcal for calories, g for macros and some nutrients, mg for most minerals and some vitamins, mcg for other vitamins.
-# Be specific and accurate with measurements."""
-#                         },
-#                         {
-#                             "type": "input_image",
-#                             "image_url": f"data:image/jpeg;base64,{base64_image}"
-#                         }
-#                     ]
-#                 }
-#             ],
-#             text_format=MealAnalysis,
-#         )
-        
-#         parsed_data = response.output_parsed
-#         return parsed_data.model_dump()
-        
-#     except Exception as e:
-#         print(f"Error analyzing image with OpenAI: {str(e)}")
-#         raise
-
-
 def analyze_meal_image(image_data: bytes, language: str = 'en') -> dict:
+    """
+    Analyze meal image using OpenAI and return structured nutritional data
+    """
     try:
         base64_image = base64.b64encode(image_data).decode('utf-8')
         
         language_prompts = {
-            'en': 'Analyze this meal photo in English.',
-            'uz': 'Ovqat rasmini tahlil qiling va o\'zbekcha javob bering.',
-            'uz-cyrl': 'Овқат расмини таҳлил қилинг ва ўзбекча жавоб беринг.',
-            'ru': 'Проанализируйте это фото еды и ответьте на русском языке.'
+            'en': 'Analyze this image in English.',
+            'uz': 'Rasmni tahlil qiling va o\'zbekcha javob bering.',
+            'uz-cyrl': 'Расмни таҳлил қилинг ва ўзбекча жавоб беринг.',
+            'ru': 'Проанализируйте это изображение и ответьте на русском языке.'
         }
         
         prompt = language_prompts.get(language, language_prompts['en'])
@@ -71,17 +25,24 @@ def analyze_meal_image(image_data: bytes, language: str = 'en') -> dict:
             input=[
                 {
                     "role": "system",
-                    "content": "You are a professional nutritionist and food analysis expert. Analyze meal images and provide detailed nutritional information for each food item detected. Be accurate and thorough in your analysis."
+                    "content": "You are a professional nutritionist and food analysis expert. Your job is to determine if an image contains food, and if so, analyze it for nutritional information."
                 },
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "input_text",
-                            "text": f"""{prompt} For each food item you can identify:
+                            "text": f"""{prompt}
+
+CRITICAL: First, determine if this image contains actual food or beverages.
+- If the image shows food or drinks, set is_food to true and analyze it.
+- If the image shows people, animals, objects, scenery, or anything else that is NOT food, set is_food to false, confidence to 'high', and return an empty foods array.
+
+If it IS food, for each food item you can identify:
 1. Identify the food name clearly
 2. Estimate the portion size (e.g., '1 burger (250g)', 'medium serving (150g)')
-3. Provide complete nutritional information including:
+3. Set confidence level (high/medium/low) based on image clarity
+4. Provide complete nutritional information including:
    - Macronutrients (calories, carbs, fat, protein)
    - Minerals (calcium, iron, magnesium, potassium, zinc)
    - Vitamins (A, B9, B12, C, D)
