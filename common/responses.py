@@ -17,14 +17,17 @@ def success_response(data=None, message=None, status_code=status.HTTP_200_OK):
     
     return Response(response_data, status=status_code)
 
-def error_response(message, errors=None, status_code=status.HTTP_400_BAD_REQUEST):
+def error_response(message, errors=None, code=None, status_code=status.HTTP_400_BAD_REQUEST):
     """
     Standard error response format
     """
     response_data = {
         "success": False,
-        "error": message
+        "message": message
     }
+    
+    if code:
+        response_data["code"] = code
     
     if errors:
         response_data["errors"] = errors

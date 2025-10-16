@@ -207,3 +207,36 @@ def profile(request):
             data=serializer.data,
             message=_('Profile updated successfully')
         )
+    
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from jwt.exceptions import ExpiredSignatureError
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def refresh_token(request):
+    from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+    
+    serializer = TokenRefreshSerializer(data=request.data)
+    
+    try:
+        serializer.is_valid(raise_exception=True)
+        return success_response(data=serializer.validated_data)
+    except ExpiredSignatureError:
+        return error_response(
+            message=_('Refresh token has expired'),
+            code='expired_refresh_token',
+            status_code=status.HTTP_403_FORBIDDEN
+        )
+    except (InvalidToken, TokenError):
+        return error_response(
+            message=_('Invalid refresh token'),
+            code='invalid_refresh_token',
+            status_code=status.HTTP_403_FORBIDDEN
+        )
+    except Exception as e:
+        return error_response(
+            message=_('Token refresh failed'),
+            code='token_refresh_failed',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )

@@ -6,6 +6,6 @@ urlpatterns = [
     path('sms/send-otp', views.send_otp, name='send-otp'),
     path('sms/verify-otp', views.verify_otp, name='verify-otp'),
     path('auth/google', views.google_auth, name='google-auth'),
-    path('auth/refresh', TokenRefreshView.as_view(), name='token-refresh'),
+    path('auth/refresh', views.refresh_token, name='refresh-token'),
     path('user/profile', views.profile, name='profile'),
 ]
