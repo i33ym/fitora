@@ -11,6 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*'] if DEBUG else ["localhost", "endpoints.fitora.uz", "www.endpoints.fitora.uz"]
+CSRF_TRUSTED_ORIGINS = [
+    'https://endpoints.fitora.uz',
+    'http://localhost:8000',
+]
 
 INSTALLED_APPS = [
     'daphne',
